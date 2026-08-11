@@ -1,0 +1,17 @@
+# Dependencias
+node_modules/
+
+# Build
+dist/
+*.local
+
+# Vercel (proyecto local)
+.vercel/
+
+# Skills del agente (configuración local)
+.agents/
+skills-lock.json
+
+# Logs y auxiliares
+*.log
+npm-debug.log*
