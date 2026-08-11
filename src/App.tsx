@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { LineChart, Moon, Search, SearchX, Sun, TrendingUp } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, LineChart, Moon, Search, SearchX, Sun, TrendingUp } from 'lucide-react'
 import type { CategoryFilter, Etf, Holding } from '@/types/etf'
 import { fetchEtfs, matchingHoldings, queryEtfs } from '@/services/etfService'
 import { categoryLabel } from '@/data/categories'
@@ -20,6 +20,12 @@ function ErrorBanner({ message }: { message: string }) {
   )
 }
 
+/** Campo de ordenamiento de los resultados visibles. */
+type SortKey = 'aum' | 'name'
+
+/** Dirección del ordenamiento activo. */
+type SortDir = 'asc' | 'desc'
+
 export default function App() {
   const [allEtfs, setAllEtfs] = useState<Etf[]>([])
   const [visible, setVisible] = useState<Etf[]>([])
@@ -27,6 +33,8 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [category, setCategory] = useState<CategoryFilter>('All')
   const [search, setSearch] = useState('')
+  const [sortKey, setSortKey] = useState<SortKey | null>(null)
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [selected, setSelected] = useState<Etf | null>(null)
   const [dark, setDark] = useState(true)
 
@@ -81,6 +89,28 @@ export default function App() {
   }, [visible, search])
 
   const hasHoldingMatches = Object.keys(holdingMatches).length > 0
+
+  // ── Ordenamiento (toggle por AUM / nombre, asc / desc) ─────────
+  /** Alterna la dirección del campo activo, o lo activa con su orden más útil. */
+  function toggleSort(next: SortKey) {
+    if (sortKey === next) {
+      setSortDir((dir) => (dir === 'asc' ? 'desc' : 'asc'))
+      return
+    }
+    setSortKey(next)
+    setSortDir(next === 'name' ? 'asc' : 'desc')
+  }
+
+  /** Resultados visibles ordenados según `sortKey` / `sortDir`. */
+  const sortedEtfs = useMemo<Etf[]>(() => {
+    if (!sortKey) return visible
+    const dir = sortDir === 'asc' ? 1 : -1
+    return [...visible].sort((a, b) =>
+      sortKey === 'aum'
+        ? (a.aum - b.aum) * dir
+        : a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }) * dir,
+    )
+  }, [visible, sortKey, sortDir])
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -156,20 +186,88 @@ export default function App() {
           {error && <ErrorBanner message={error} />}
 
           {!error && (
-            <div className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{visible.length}</span>
-              {visible.length === 1 ? 'ETF encontrado' : 'ETFs encontrados'}
-              {category !== 'All' && (
-                <>
-                  {' '}
-                  en{' '}
-                  <span className="font-medium text-accent">{categoryLabel(category)}</span>
-                </>
-              )}
-              {hasHoldingMatches && (
-                <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-xs font-semibold text-accent">
-                  {search.trim().toUpperCase()} en tenencias
-                </span>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">{visible.length}</span>
+                {visible.length === 1 ? 'ETF encontrado' : 'ETFs encontrados'}
+                {category !== 'All' && (
+                  <>
+                    {' '}
+                    en{' '}
+                    <span className="font-medium text-accent">{categoryLabel(category)}</span>
+                  </>
+                )}
+                {hasHoldingMatches && (
+                  <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-xs font-semibold text-accent">
+                    {search.trim().toUpperCase()} en tenencias
+                  </span>
+                )}
+              </div>
+
+              {visible.length > 1 && (
+                <div className="flex items-center gap-2" role="group" aria-label="Ordenar resultados">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-pressed={sortKey === 'name'}
+                    title={
+                      sortKey === 'name'
+                        ? sortDir === 'asc'
+                          ? 'Ordenado A → Z · click para Z → A'
+                          : 'Ordenado Z → A · click para A → Z'
+                        : 'Ordenar alfabéticamente'
+                    }
+                    onClick={() => toggleSort('name')}
+                    className={cn(
+                      'rounded-full border',
+                      sortKey === 'name'
+                        ? 'border-primary/50 bg-primary/15 text-primary hover:bg-primary/20'
+                        : 'border-transparent text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    {sortKey === 'name' ? (
+                      sortDir === 'asc' ? (
+                        <ArrowUp className="h-3.5 w-3.5" />
+                      ) : (
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="h-3.5 w-3.5" />
+                    )}
+                    Nombre
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-pressed={sortKey === 'aum'}
+                    title={
+                      sortKey === 'aum'
+                        ? sortDir === 'desc'
+                          ? 'Mayor AUM primero · click para menor primero'
+                          : 'Menor AUM primero · click para mayor primero'
+                        : 'Ordenar por AUM'
+                    }
+                    onClick={() => toggleSort('aum')}
+                    className={cn(
+                      'rounded-full border',
+                      sortKey === 'aum'
+                        ? 'border-primary/50 bg-primary/15 text-primary hover:bg-primary/20'
+                        : 'border-transparent text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    {sortKey === 'aum' ? (
+                      sortDir === 'desc' ? (
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      ) : (
+                        <ArrowUp className="h-3.5 w-3.5" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="h-3.5 w-3.5" />
+                    )}
+                    AUM
+                  </Button>
+                </div>
               )}
             </div>
           )}
@@ -192,7 +290,7 @@ export default function App() {
               />
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {visible.map((etf) => (
+                {sortedEtfs.map((etf) => (
                   <EtfCard
                     key={etf.id}
                     etf={etf}
