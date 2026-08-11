@@ -1,5 +1,5 @@
 import { ArrowUpRight, CalendarRange, CircleDollarSign, Layers } from 'lucide-react'
-import type { Etf } from '@/types/etf'
+import type { Etf, Holding } from '@/types/etf'
 import { categoryLabel } from '@/data/categories'
 import { sectorLabel } from '@/data/sectors'
 import { cn, formatCurrency, formatPercent, formatPercentPlain } from '@/lib/utils'
@@ -9,6 +9,8 @@ import { Card } from '@/components/ui/Card'
 export interface EtfCardProps {
   etf: Etf
   onSelect: (etf: Etf) => void
+  /** Tenencias del ETF que coinciden con la búsqueda activa (para destacarlas). */
+  matchedHoldings?: Holding[]
 }
 
 /** Color semántico para rendimientos (verde esmeralda / rojo coral). */
@@ -42,7 +44,7 @@ function Metric({
  * Tarjeta resumen de un ETF. Muestra ticker, sector, AUM, expense ratio,
  * precio y rendimientos (YTD / 1Y). Al hacer clic abre el detalle completo.
  */
-export function EtfCard({ etf, onSelect }: EtfCardProps) {
+export function EtfCard({ etf, onSelect, matchedHoldings }: EtfCardProps) {
   return (
     <Card
       role="button"
@@ -71,6 +73,27 @@ export function EtfCard({ etf, onSelect }: EtfCardProps) {
             </Badge>
           </div>
           <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{etf.name}</p>
+            {matchedHoldings && matchedHoldings.length > 0 && (
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <span className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[11px] font-semibold text-accent">
+                  En tenencias
+                </span>
+                {matchedHoldings.slice(0, 3).map((holding) => (
+                  <span
+                    key={holding.ticker}
+                    title={`${holding.name} · ${formatPercentPlain(holding.weight)} de la cartera`}
+                    className="inline-flex items-center gap-1 rounded-full bg-muted/70 px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground"
+                  >
+                    {holding.ticker} · {formatPercentPlain(holding.weight)}
+                  </span>
+                ))}
+                {matchedHoldings.length > 3 && (
+                  <span className="text-[11px] font-medium text-muted-foreground">
+                    +{matchedHoldings.length - 3}
+                  </span>
+                )}
+              </div>
+            )}
         </div>
 
         <div className="shrink-0 text-right">

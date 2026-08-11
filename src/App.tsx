@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { LineChart, Moon, Search, SearchX, Sun, TrendingUp } from 'lucide-react'
-import type { CategoryFilter, Etf } from '@/types/etf'
-import { fetchEtfs, queryEtfs } from '@/services/etfService'
+import type { CategoryFilter, Etf, Holding } from '@/types/etf'
+import { fetchEtfs, matchingHoldings, queryEtfs } from '@/services/etfService'
 import { categoryLabel } from '@/data/categories'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
@@ -69,6 +69,19 @@ export default function App() {
     return counts
   }, [allEtfs])
 
+  // Coincidencias por tenencia para la consulta activa (se destacan en las tarjetas).
+  const holdingMatches = useMemo<Record<string, Holding[]>>(() => {
+    const matches: Record<string, Holding[]> = {}
+    if (!search.trim()) return matches
+    for (const etf of visible) {
+      const found = matchingHoldings(etf, search)
+      if (found.length > 0) matches[etf.id] = found
+    }
+    return matches
+  }, [visible, search])
+
+  const hasHoldingMatches = Object.keys(holdingMatches).length > 0
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
@@ -131,7 +144,7 @@ export default function App() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por ticker o nombre (ej. XLK, VOO, SCHD...)"
+              placeholder="Buscar por ticker, nombre o tenencia (ej. AAPL, NVDA, Oro...)"
               className="pl-9"
               aria-label="Buscar ETF"
             />
@@ -152,6 +165,11 @@ export default function App() {
                   en{' '}
                   <span className="font-medium text-accent">{categoryLabel(category)}</span>
                 </>
+              )}
+              {hasHoldingMatches && (
+                <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-xs font-semibold text-accent">
+                  {search.trim().toUpperCase()} en tenencias
+                </span>
               )}
             </div>
           )}
@@ -175,7 +193,12 @@ export default function App() {
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {visible.map((etf) => (
-                  <EtfCard key={etf.id} etf={etf} onSelect={setSelected} />
+                  <EtfCard
+                    key={etf.id}
+                    etf={etf}
+                    onSelect={setSelected}
+                    matchedHoldings={holdingMatches[etf.id]}
+                  />
                 ))}
               </div>
             ))
@@ -214,7 +237,7 @@ function EmptyState({
       </h3>
       <p className="mt-1 max-w-sm text-sm text-muted-foreground">
         {hasQuery
-          ? 'Probalo con otro ticker o nombre.'
+          ? 'Probalo con otro ticker, nombre o activo en sus tenencias.'
           : 'Aún no cargamos fondos con estos criterios.'}
       </p>
       <Button variant="outline" className="mt-4" onClick={onReset}>
