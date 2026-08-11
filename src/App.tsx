@@ -21,7 +21,7 @@ function ErrorBanner({ message }: { message: string }) {
 }
 
 /** Campo de ordenamiento de los resultados visibles. */
-type SortKey = 'aum' | 'name'
+type SortKey = 'aum' | 'ticker'
 
 /** Dirección del ordenamiento activo. */
 type SortDir = 'asc' | 'desc'
@@ -90,7 +90,7 @@ export default function App() {
 
   const hasHoldingMatches = Object.keys(holdingMatches).length > 0
 
-  // ── Ordenamiento (toggle por AUM / nombre, asc / desc) ─────────
+  // ── Ordenamiento (toggle por AUM / ticker, asc / desc) ───────
   /** Alterna la dirección del campo activo, o lo activa con su orden más útil. */
   function toggleSort(next: SortKey) {
     if (sortKey === next) {
@@ -98,7 +98,7 @@ export default function App() {
       return
     }
     setSortKey(next)
-    setSortDir(next === 'name' ? 'asc' : 'desc')
+    setSortDir(next === 'ticker' ? 'asc' : 'desc')
   }
 
   /** Resultados visibles ordenados según `sortKey` / `sortDir`. */
@@ -108,7 +108,7 @@ export default function App() {
     return [...visible].sort((a, b) =>
       sortKey === 'aum'
         ? (a.aum - b.aum) * dir
-        : a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }) * dir,
+        : a.ticker.localeCompare(b.ticker, 'es', { sensitivity: 'base' }) * dir,
     )
   }, [visible, sortKey, sortDir])
 
@@ -209,23 +209,23 @@ export default function App() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    aria-pressed={sortKey === 'name'}
+                    aria-pressed={sortKey === 'ticker'}
                     title={
-                      sortKey === 'name'
+                      sortKey === 'ticker'
                         ? sortDir === 'asc'
                           ? 'Ordenado A → Z · click para Z → A'
                           : 'Ordenado Z → A · click para A → Z'
-                        : 'Ordenar alfabéticamente'
+                        : 'Ordenar por ticker'
                     }
-                    onClick={() => toggleSort('name')}
+                    onClick={() => toggleSort('ticker')}
                     className={cn(
                       'rounded-full border',
-                      sortKey === 'name'
+                      sortKey === 'ticker'
                         ? 'border-primary/50 bg-primary/15 text-primary hover:bg-primary/20'
                         : 'border-transparent text-muted-foreground hover:text-foreground',
                     )}
                   >
-                    {sortKey === 'name' ? (
+                    {sortKey === 'ticker' ? (
                       sortDir === 'asc' ? (
                         <ArrowUp className="h-3.5 w-3.5" />
                       ) : (
@@ -234,7 +234,7 @@ export default function App() {
                     ) : (
                       <ArrowUpDown className="h-3.5 w-3.5" />
                     )}
-                    Nombre
+                    Ticker
                   </Button>
 
                   <Button
