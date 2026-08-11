@@ -215,7 +215,7 @@ export default function App() {
                         ? sortDir === 'asc'
                           ? 'Ordenado A → Z · click para Z → A'
                           : 'Ordenado Z → A · click para A → Z'
-                        : 'Ordenar por ticker'
+                        : 'Ordenar alfabéticamente'
                     }
                     onClick={() => toggleSort('ticker')}
                     className={cn(
@@ -234,7 +234,7 @@ export default function App() {
                     ) : (
                       <ArrowUpDown className="h-3.5 w-3.5" />
                     )}
-                    Ticker
+                    Nombre
                   </Button>
 
                   <Button
