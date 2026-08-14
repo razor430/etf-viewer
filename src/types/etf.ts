@@ -65,6 +65,8 @@ export interface Etf {
   expenseRatio: number
   /** Último precio de mercado. */
   price: number
+  /** Variación porcentual del día actual. */
+  dayChange: number
   /** Rendimiento año a la fecha (%) */
   ytd: number
   /** Rendimiento a 1 año (%). */

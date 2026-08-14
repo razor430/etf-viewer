@@ -42,7 +42,8 @@ function Metric({
 
 /**
  * Tarjeta resumen de un ETF. Muestra ticker, sector, AUM, expense ratio,
- * precio y rendimientos (YTD / 1Y). Al hacer clic abre el detalle completo.
+ * precio con la variación del día y rendimientos (1Y / YTD). Al hacer
+ * clic abre el detalle completo.
  */
 export function EtfCard({ etf, onSelect, matchedHoldings }: EtfCardProps) {
   return (
@@ -101,16 +102,16 @@ export function EtfCard({ etf, onSelect, matchedHoldings }: EtfCardProps) {
           <p
             className={cn(
               'text-xs font-semibold tabular-nums',
-              performanceClass(etf.ytd),
+              performanceClass(etf.dayChange),
             )}
           >
-            {formatPercent(etf.ytd)} YTD
+            {formatPercent(etf.dayChange)} Hoy
           </p>
         </div>
       </div>
 
       <div className="relative border-t border-border/70 p-5 pt-4">
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
           <Metric
             label="AUM"
             value={formatCurrency(etf.aum)}
@@ -124,6 +125,11 @@ export function EtfCard({ etf, onSelect, matchedHoldings }: EtfCardProps) {
             label="Retorno 1 año"
             value={formatPercent(etf.return1y)}
             valueClass={performanceClass(etf.return1y)}
+          />
+          <Metric
+            label="YTD"
+            value={formatPercent(etf.ytd)}
+            valueClass={performanceClass(etf.ytd)}
           />
         </dl>
 
