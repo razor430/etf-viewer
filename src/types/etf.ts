@@ -85,4 +85,9 @@ export interface Etf {
   topHoldings: Holding[]
   /** Fecha de referencia de los datos. */
   dataAsOf: string
+  /**
+   * Rendimientos reales por año calendario (2021-2025).
+   * Si no se proporciona, se calculan sintéticamente desde return5y.
+   */
+  yearlyReturns?: Record<number, number> | null
 }

@@ -59,7 +59,7 @@ export function Modal({
   if (!open) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-6 md:items-center">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-6">
       {/* Overlay */}
       <div
         className="fixed inset-0 animate-fade-in bg-black/60 backdrop-blur-sm"
@@ -73,7 +73,7 @@ export function Modal({
         aria-modal="true"
         aria-label={typeof title === 'string' ? title : 'Detalle del ETF'}
         className={cn(
-          'relative z-10 my-8 w-full animate-scale-in rounded-2xl border border-border bg-card text-card-foreground shadow-2xl',
+          'relative z-10 my-auto w-full animate-scale-in rounded-2xl border border-border bg-card text-card-foreground shadow-2xl',
           SIZE_CLASSES[size],
           className,
         )}

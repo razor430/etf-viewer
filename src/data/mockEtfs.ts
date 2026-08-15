@@ -127,6 +127,13 @@ export const mockEtfs: Etf[] = [
     beta: 1.05,
     holdingsCount: 72,
     dataAsOf: '2026-06-04',
+    yearlyReturns: {
+      2021: 34.95,
+      2022: -10.58,
+      2023: 13.68,
+      2024: 26.35,
+      2025: 39.4,
+    },
     topHoldings: [
       h('Berkshire Hathaway', 'BRK.B', 11.66, 'Financials'),
       h('JPMorgan Chase', 'JPM', 11.54, 'Financials'),
@@ -649,6 +656,13 @@ export const mockEtfs: Etf[] = [
     beta: 1.0,
     holdingsCount: 503,
     dataAsOf: '2026-06-04',
+    yearlyReturns: {
+      2021: 26.89,
+      2022: -18.16,
+      2023: 24.23,
+      2024: 25.02,
+      2025: 26.1,
+    },
     topHoldings: [
       h('Apple Inc.', 'AAPL', 7.89, 'Technology'),
       h('NVIDIA Corporation', 'NVDA', 7.31, 'Technology'),

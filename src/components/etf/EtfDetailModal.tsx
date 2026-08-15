@@ -6,6 +6,7 @@ import { sectorColor, sectorLabel } from '@/data/sectors'
 import { cn, formatCurrency, formatPercent, formatPercentPlain } from '@/lib/utils'
 import { Modal } from '@/components/ui/Modal'
 import { Badge } from '@/components/ui/Badge'
+import { SeasonalReturnsChart } from '@/components/etf/SeasonalReturnsChart'
 
 export interface EtfDetailModalProps {
   etf: Etf | null
@@ -221,6 +222,11 @@ export function EtfDetailModal({ etf, onClose }: EtfDetailModalProps) {
               </table>
             </div>
           </div>
+        </div>
+
+        {/* Gráfico de rendimiento estacional */}
+        <div className="mt-6">
+          <SeasonalReturnsChart etf={etf} />
         </div>
       </div>
     </Modal>
