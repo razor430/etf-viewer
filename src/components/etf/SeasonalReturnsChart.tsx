@@ -57,7 +57,97 @@ function formatMonth(day: number): string {
   return MONTH_LABELS[dayToMonth(day)] ?? ''
 }
 
-/** Etiquetas de año (y promedio) al final de cada línea. */
+/** Constants de layout para las etiquetas de año. */
+const DAY_MIN = 1
+const DAY_MAX = 365
+/** Separación horizontal entre el final de la línea y su etiqueta. */
+const YEAR_LABEL_X_OFFSET = 6
+/** Separación vertical mínima entre etiquetas de la misma columna. */
+const YEAR_LABEL_GAP = 13
+/** Altura/media-ancho aproximados del texto de la etiqueta. */
+const YEAR_LABEL_HALF_H = 7
+/** Máxima distancia en X para considerar dos etiquetas "de la misma columna". */
+const COLUMN_EPSILON = 52
+
+/**
+ * Calcula el mismo dominio [yBottom, yTop] que usa el eje Y del gráfico.
+ * Se comparte con las etiquetas para que su posición coincida exactamente
+ * con el final de cada línea.
+ */
+function computeYearlyDomain(rows: Record<string, unknown>[]): { yBottom: number; yTop: number } {
+  if (rows.length === 0) return { yBottom: -1, yTop: 1 }
+  const keys = Object.keys(rows[0]).filter((k) => k !== 'day' && k !== 'avg' && k !== '_label')
+  let yMin = 0
+  let yMax = 0
+  for (const row of rows) {
+    for (const y of keys) {
+      const v = row[y] as number | null
+      if (v == null) continue
+      if (v < yMin) yMin = v
+      if (v > yMax) yMax = v
+    }
+  }
+  const yRange = Math.max(Math.abs(yMax - yMin), 1)
+
+  if (yMin >= 0) {
+    return { yBottom: 0 - yRange * 0.1, yTop: yMax + yRange * 0.15 }
+  }
+  if (yMax <= 0) {
+    return { yBottom: yMin - yRange * 0.15, yTop: 0 + yRange * 0.1 }
+  }
+  return { yBottom: yMin - yRange * 0.55, yTop: yMax + yRange * 0.15 }
+}
+
+/** Posición de una etiqueta de año. */
+interface YearLabelPos {
+  year: string
+  x: number
+  y: number
+  /** Posición Y real del final de la línea (para el leader si se desplaza). */
+  lineEndY: number
+  color: string
+  isCurrent: boolean
+}
+
+/**
+ * Evita que etiquetas de la misma columna queden encimadas: agrupa por X
+ * (columnas) y dentro de cada columna fuerza una separación vertical mínima.
+ */
+function resolveOverlaps(labels: YearLabelPos[]): YearLabelPos[] {
+  if (labels.length <= 1) return labels
+  const sorted = [...labels].sort((a, b) => a.x - b.x || a.y - b.y)
+  const columns: YearLabelPos[][] = []
+  for (const lb of sorted) {
+    const col = columns.find((c) => Math.abs(c[0].x - lb.x) <= COLUMN_EPSILON)
+    if (col) {
+      col.push(lb)
+    } else {
+      columns.push([lb])
+    }
+  }
+
+  const resolved: YearLabelPos[] = []
+  for (const col of columns) {
+    const topDown = [...col].sort((a, b) => a.y - b.y)
+    for (let i = 0; i < topDown.length; i++) {
+      if (i > 0) {
+        const minY = topDown[i - 1].y + YEAR_LABEL_HALF_H * 2 + YEAR_LABEL_GAP
+        if (topDown[i].y < minY) {
+          topDown[i] = { ...topDown[i], y: minY }
+        }
+      }
+      resolved.push(topDown[i])
+    }
+  }
+  return resolved
+}
+
+/**
+ * Etiquetas de año colocadas al final de cada línea (último punto válido),
+ * usando la MISMA escala del eje Y (domain) para alinearse exactamente.
+ * Si dos etiquetas de la misma columna quedan encimadas se separan y se
+ * dibuja una pequeña guía vertical hasta el final real de la línea.
+ */
 function YearEndLabels(props: {
   data?: Record<string, unknown>[]
   width?: number
@@ -69,64 +159,75 @@ function YearEndLabels(props: {
 
   const chartW = width - offset.left - offset.right
   const chartH = height - offset.top - offset.bottom
+  const plotTop = offset.top
+  const plotLeft = offset.left
+  const { yBottom, yTop } = computeYearlyDomain(data)
 
-  let yMin = 0
-  let yMax = 0
   const keys = Object.keys(data[0]).filter((k) => k !== 'day' && k !== 'avg' && k !== '_label')
-  for (const row of data) {
-    for (const y of keys) {
-      const v = row[y] as number | null
-      if (v == null) continue
-      if (v < yMin) yMin = v
-      if (v > yMax) yMax = v
+
+  const ideal: YearLabelPos[] = []
+  for (const year of keys) {
+    let lastVal: number | null = null
+    let lastDay = DAY_MIN
+    for (let i = data.length - 1; i >= 0; i--) {
+      const v = data[i][year] as number | null
+      if (v != null) {
+        lastVal = v
+        lastDay = data[i].day as number
+        break
+      }
     }
-  }
-  const yRange = Math.max(Math.abs(yMax - yMin), 1)
+    if (lastVal == null) continue
 
-  let yBottom: number, yTop: number
-  if (yMin >= 0) {
-    yBottom = 0 - yRange * 0.1
-    yTop = yMax + yRange * 0.15
-  } else if (yMax <= 0) {
-    yBottom = yMin - yRange * 0.15
-    yTop = 0 + yRange * 0.1
-  } else {
-    yBottom = yMin - yRange * 0.55
-    yTop = yMax + yRange * 0.15
+    // día → px en el eje X (domain [1, 365])
+    const x = plotLeft + chartW * ((lastDay - DAY_MIN) / (DAY_MAX - DAY_MIN))
+    // valor → px en el eje Y (domain [yBottom, yTop])
+    const y = plotTop + chartH * (1 - (lastVal - yBottom) / (yTop - yBottom))
+    ideal.push({
+      year: String(year),
+      x,
+      y,
+      lineEndY: y,
+      color: YEAR_COLORS[Number(year)] ?? '#64748b',
+      isCurrent: String(year) === String(CURRENT_YEAR),
+    })
   }
 
-  const xPos = offset.left + chartW + 6
+  const labels = resolveOverlaps(ideal)
 
   return (
     <g>
-      {keys.map((year) => {
-        let lastVal: number | null = null
-        for (let i = data.length - 1; i >= 0; i--) {
-          const v = data[i][year] as number | null
-          if (v != null) {
-            lastVal = v
-            break
-          }
-        }
-        if (lastVal == null) return null
-
-        const isCurrent = year === String(CURRENT_YEAR)
-        const color = YEAR_COLORS[Number(year)] ?? '#64748b'
-        const yPos = offset.top + chartH - ((lastVal - yBottom) / (yTop - yBottom)) * chartH
-
+      {labels.map((lb) => {
+        const nudged = Math.abs(lb.y - lb.lineEndY) > 1
         return (
-          <text
-            key={year}
-            x={xPos}
-            y={yPos}
-            fill={color}
-            fontSize={isCurrent ? 12 : 11}
-            fontWeight={isCurrent ? 600 : 400}
-            textAnchor="start"
-            dominantBaseline="middle"
-          >
-            {year}
-          </text>
+          <g key={lb.year}>
+            {nudged && (
+              <line
+                x1={lb.x + YEAR_LABEL_X_OFFSET / 2}
+                y1={lb.lineEndY}
+                x2={lb.x + YEAR_LABEL_X_OFFSET / 2}
+                y2={lb.y}
+                stroke={lb.color}
+                strokeWidth={1}
+                strokeOpacity={0.6}
+              />
+            )}
+            <text
+              x={lb.x + YEAR_LABEL_X_OFFSET}
+              y={lb.y}
+              fill={lb.color}
+              fontSize={lb.isCurrent ? 12 : 11}
+              fontWeight={lb.isCurrent ? 600 : 400}
+              textAnchor="start"
+              dominantBaseline="middle"
+              paintOrder="stroke"
+              stroke="var(--card)"
+              strokeWidth={3}
+              strokeLinejoin="round"
+            >
+              {lb.year}
+            </text>
+          </g>
         )
       })}
     </g>
@@ -210,6 +311,9 @@ export function SeasonalReturnsChart({ etf }: SeasonalReturnsChartProps) {
 
   if (chartData.length === 0) return null
 
+  // Dominio real del eje Y, compartido con las etiquetas para alinearse exactamente.
+  const yDomain = computeYearlyDomain(chartData)
+
   return (
     <div className="rounded-xl border border-border bg-background/30 p-4">
       <div className="flex items-start justify-between gap-2">
@@ -257,6 +361,7 @@ export function SeasonalReturnsChart({ etf }: SeasonalReturnsChartProps) {
               dy={6}
             />
             <YAxis
+              domain={[yDomain.yBottom, yDomain.yTop]}
               tickFormatter={formatPct}
               tick={{ fontSize: 11, fill: '#94a3b8' }}
               axisLine={false}
