@@ -146,7 +146,9 @@ function buildYearSeries(etf: Etf, year: number, idHash: number): SeasonalPoint[
     end = new Date(year, 11, 31)
   }
 
-  const start = new Date(year, 0, 1)
+  const start = isCurrent && etf.inceptionDay != null && etf.inceptionDay > 1
+    ? new Date(year, 0, etf.inceptionDay)
+    : new Date(year, 0, 1)
   const ordinals: number[] = []
   for (const dt = new Date(start); dt <= end; dt.setDate(dt.getDate() + 1)) {
     if (!WEEKEND.has(dt.getDay())) {
@@ -156,6 +158,10 @@ function buildYearSeries(etf: Etf, year: number, idHash: number): SeasonalPoint[
 
   const path = buildDailyPath(targetReturn, ordinals.length, vol, idHash + year * 100)
   const trades: SeasonalPoint[] = ordinals.map((ordinal, i) => ({ day: ordinal, value: path[i] }))
+
+  // ETF listado a mitad de año: no rellenar los días previos al listado.
+  const startsMidYear = isCurrent && etf.inceptionDay != null && etf.inceptionDay > 1
+  if (startsMidYear) return trades
   return fillCalendar(trades)
 }
 

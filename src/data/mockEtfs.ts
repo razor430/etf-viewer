@@ -904,6 +904,7 @@ export const mockEtfs: Etf[] = [
     beta: 1.45,
     holdingsCount: 26,
     dataAsOf: '2026-06-04',
+    inceptionDay: 92,
     yearlyReturns: {
       2021: null,
       2022: null,

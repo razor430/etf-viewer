@@ -86,6 +86,13 @@ export interface Etf {
   /** Fecha de referencia de los datos. */
   dataAsOf: string
   /**
+   * Día ordinal del año (1-365, con Feb=28 días) en que el ETF empezó a cotizar,
+   * para ETF listados a mitad de año (ej: DRAM, 2026-04-02 → día 92).
+   * Si está seteado, la serie del año en curso arranca en ese día en lugar
+   * del 1 de enero (los días previos no se dibujan porque el ETF no existía).
+   */
+  inceptionDay?: number
+  /**
    * Rendimientos reales por año calendario (2021-2025).
    * `null` en un año significa que el ETF todavía no cotizaba (ej: listado
    * posterior) y el gráfico no dibuja la línea de ese año.
