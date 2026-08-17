@@ -113,8 +113,10 @@ export function getMonthlySeries(etf: Etf): YearSeries[] {
     let annualReturn: number
 
     if (hasRealReturns) {
-      // Usar el dato real si existe, sino calcular sintético
-      annualReturn = etf.yearlyReturns![year] ?? syntheticYearlyReturn(etf, year, idHash)
+      const realReturn = etf.yearlyReturns![year]
+      // `null` = el ETF no cotizaba aún ese año (listado posterior): omitir la serie.
+      if (realReturn == null) continue
+      annualReturn = realReturn
     } else {
       annualReturn = syntheticYearlyReturn(etf, year, idHash)
     }

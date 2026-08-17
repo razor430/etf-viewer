@@ -87,7 +87,9 @@ export interface Etf {
   dataAsOf: string
   /**
    * Rendimientos reales por año calendario (2021-2025).
-   * Si no se proporciona, se calculan sintéticamente desde return5y.
+   * `null` en un año significa que el ETF todavía no cotizaba (ej: listado
+   * posterior) y el gráfico no dibuja la línea de ese año.
+   * Si no se proporciona ningún dato real, se calculan sintéticamente desde return5y.
    */
-  yearlyReturns?: Record<number, number> | null
+  yearlyReturns?: Record<number, number | null> | null
 }

@@ -13,6 +13,11 @@
  * Los precios diarios se sintetizan desde las métricas conocidas del ETF
  * (YTD, return1y, return5y / yearlyReturns) para mantener coherencia con el
  * resto de la información, igual que el resto del dataset offline.
+ *
+ * Cuando el ETF declara `yearlyReturns` reales (2021-2025), el extremo de cada
+ * año queda anclado al dato real; los años declarados como `null` (ETF no
+ * cotizaba aún, ej: DRAM) no generan línea. Sin `yearlyReturns` se usa el
+ * retorno sintético derivado de return5y.
  */
 
 import type { Etf } from '@/types/etf'
@@ -133,6 +138,10 @@ function buildYearSeries(etf: Etf, year: number, idHash: number): SeasonalPoint[
     targetReturn = etf.ytd
     end = endOfCurrentSeries()
   } else {
+    // Año declarado como null en yearlyReturns: el ETF no cotizaba todavía.
+    if (etf.yearlyReturns != null && etf.yearlyReturns[year] == null) {
+      return []
+    }
     targetReturn = etf.yearlyReturns?.[year] ?? syntheticYearlyReturn(etf, year, idHash)
     end = new Date(year, 11, 31)
   }
