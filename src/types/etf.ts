@@ -93,6 +93,15 @@ export interface Etf {
    */
   inceptionDay?: number
   /**
+   * Serie diaria real del año en curso: pares [día ordinal (MM-DD, Feb=28 días),
+   * retorno acumulado YTD %. P0 = cierre del primer día hábil del año].
+   * Cuando está presente, el gráfico estacional del año en curso dibuja la
+   * trayectoria real (dips y picos, ej: IGPT negativo en marzo-abril y pico de
+   * +77% en junio 2026) en lugar de la línea sintética derivada de `ytd`.
+   * Debe venir ordenada de forma ascendente por día.
+   */
+  currentYearDaily?: Array<[number, number]>
+  /**
    * Rendimientos reales por año calendario (2021-2025).
    * `null` en un año significa que el ETF todavía no cotizaba (ej: listado
    * posterior) y el gráfico no dibuja la línea de ese año.

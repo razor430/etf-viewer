@@ -18,6 +18,11 @@
  * año queda anclado al dato real; los años declarados como `null` (ETF no
  * cotizaba aún, ej: DRAM) no generan línea. Sin `yearlyReturns` se usa el
  * retorno sintético derivado de return5y.
+ *
+ * Además, si el ETF declara `currentYearDaily` (serie diaria real del año en
+ * curso), la línea del año en curso dibuja esa trayectoria real (dips y picos,
+ * ej: IGPT −9% en marzo y +77% en junio 2026) recortada a la fecha actual,
+ * en lugar de la línea sintética derivada del `ytd`.
  */
 
 import type { Etf } from '@/types/etf'
@@ -144,6 +149,23 @@ function buildYearSeries(etf: Etf, year: number, idHash: number): SeasonalPoint[
     }
     targetReturn = etf.yearlyReturns?.[year] ?? syntheticYearlyReturn(etf, year, idHash)
     end = new Date(year, 11, 31)
+  }
+
+  // Año en curso con serie diaria real: dibujar la trayectoria real (dips y
+  // picos, ej: IGPT −9% en marzo y +77% en junio 2026) recortada a la fecha
+  // actual, en lugar de la línea sintética generada desde `ytd`.
+  if (isCurrent && etf.currentYearDaily != null && etf.currentYearDaily.length > 0) {
+    const endOrdinal = dayOrdinal(end.getMonth() + 1, end.getDate())
+    const real: SeasonalPoint[] = []
+    for (const [day, value] of etf.currentYearDaily) {
+      if (day > endOrdinal) break
+      real.push({ day, value })
+    }
+    if (real.length > 0) {
+      // ETF listado a mitad de año: no rellenar los días previos al listado.
+      const startsMidYear = etf.inceptionDay != null && etf.inceptionDay > 1
+      return startsMidYear ? real : fillCalendar(real)
+    }
   }
 
   const start = isCurrent && etf.inceptionDay != null && etf.inceptionDay > 1
