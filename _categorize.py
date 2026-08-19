@@ -3,7 +3,7 @@ path = 'src/data/mockEtfs.ts'
 s = open(path, encoding='utf-8').read()
 
 # ticker -> categoria (agrupacion final: indices, sectores, commodities, bonos)
-SECTORES = ['XLK','XLV','XLF','XLE','XLY','XLP','XLI','XLU','XLB','XLRE','XLC','SMH','DRAM','ARKK','ARKW','ARKG','ARKQ','ARKF']
+SECTORES = ['XLK','XLV','XLF','XLE','XLY','XLP','XLI','XLU','XLB','XLRE','XLC','SMH','DRAM','IGPT','BAI','ARKK','ARKW','ARKG','ARKQ','ARKF']
 COMMODITIES = ['GDX','GLD','SLV','USO','DBC','SIL']
 RENTA_FIJA = ['AGG','TLT','HYG','LQD']
 def cat(t):
