@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowDown, ArrowUp, ArrowUpDown, LineChart, Moon, Search, SearchX, Sun, TrendingUp } from 'lucide-react'
+import { ArrowDown, ArrowUp, ArrowUpDown, Moon, Search, SearchX, Sun, TrendingUp } from 'lucide-react'
 import type { CategoryFilter, Etf, Holding } from '@/types/etf'
 import { fetchEtfs, matchingHoldings, queryEtfs } from '@/services/etfService'
 import { categoryLabel } from '@/data/categories'
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { Logo3D } from '@/components/ui/Logo3D'
 import { CategoryFilter as CategoryFilterBar } from '@/components/etf/CategoryFilter'
 import { EtfCard } from '@/components/etf/EtfCard'
 import { EtfDetailModal } from '@/components/etf/EtfDetailModal'
@@ -118,9 +119,7 @@ export default function App() {
       <header className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
-              <LineChart className="h-5 w-5" />
-            </div>
+            <Logo3D />
             <div className="leading-tight">
               <h1 className="text-base font-bold tracking-tight">
                 ETF <span className="text-accent">Explorer</span>

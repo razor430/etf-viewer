@@ -160,3 +160,59 @@ body {
     box-shadow: 0 0 18px 2px rgba(34, 211, 238, 0.18);
   }
 }
+
+/* ── Logo 3D (grafo de nodos con perspectiva) ─────────────────
+   Grafo WebGL (three.js) renderizado en un canvas: nodos y aristas
+   cian con perspectiva real de cámara, sobre un halo exterior para
+   que contraste con el header en modo claro y oscuro. */
+.logo3d {
+  position: relative;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+}
+
+/* Halo exterior para despegar el logo del header. */
+.logo3d-halo {
+  position: absolute;
+  inset: -0.35rem;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(34, 211, 238, 0.28) 0%,
+    rgba(34, 211, 238, 0.1) 45%,
+    transparent 72%
+  );
+  filter: blur(1px);
+  animation: logo3d-halo-pulse 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Contenedor del canvas WebGL (no intercepta clicks del header). */
+.logo3d-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.logo3d-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes logo3d-halo-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo3d-halo {
+    animation: none;
+  }
+}
