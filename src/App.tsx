@@ -160,7 +160,7 @@ export default function App() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por ticker (ej. VOO, QQQ, SPY...)"
+              placeholder="Buscar por ticker de ETF o acción (ej. VOO, QQQ, AAPL...)"
               className="pl-9"
               aria-label="Buscar ETF"
             />
@@ -315,7 +315,7 @@ function EmptyState({
       </h3>
       <p className="mt-1 max-w-sm text-sm text-muted-foreground">
         {hasQuery
-          ? 'Probalo con el ticker exacto de otro ETF (ej. VOO, QQQ, SPY).'
+          ? 'Probalo con el ticker exacto de un ETF o de una acción de su cartera (ej. VOO, AAPL, NVDA).'
           : 'Aún no cargamos fondos con estos criterios.'}
       </p>
       <Button variant="outline" className="mt-4" onClick={onReset}>

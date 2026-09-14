@@ -1,5 +1,5 @@
 import { mockEtfs } from '@/data/mockEtfs'
-import type { CategoryFilter, Etf } from '@/types/etf'
+import type { CategoryFilter, Etf, Holding } from '@/types/etf'
 
 /**
  * Capa de datos de la aplicación.
@@ -39,17 +39,29 @@ export async function getEtfByTicker(ticker: string): Promise<Etf> {
 }
 
 /**
- * Retorna `true` si el ticker del ETF coincide de forma IDÉNTICA con la
- * consulta (case-insensitive). El buscador sólo filtra por ticker exacto:
- * no por nombre, descripción ni tenencias.
+ * Devuelve las tenencias de `etf` cuyo ticker coincide de forma IDÉNTICA con
+ * la consulta (case-insensitive). Permite mostrar los ETFs que tienen a esa
+ * acción en cartera cuando se busca su ticker.
  */
-function etfMatchesTicker(etf: Etf, q: string): boolean {
-  return etf.ticker.toLowerCase() === q
+export function matchingHoldings(etf: Etf, query: string): Holding[] {
+  const q = query.trim().toLowerCase()
+  if (!q) return []
+  return etf.topHoldings.filter((h) => h.ticker.toLowerCase() === q)
 }
 
 /**
- * Búsqueda de ETFs por ticker idéntico (case-insensitive).
- * Simula GET /etfs/search?q=...
+ * Retorna `true` si el ticker del ETF o el de alguna de sus tenencias coincide
+ * de forma IDÉNTICA con la consulta (case-insensitive). El buscador no filtra
+ * por nombre ni descripción, y no usa coincidencia parcial: sólo tickers
+ * idénticos (de ETF o de una acción de su cartera).
+ */
+function etfMatchesQuery(etf: Etf, q: string): boolean {
+  return etf.ticker.toLowerCase() === q || matchingHoldings(etf, q).length > 0
+}
+
+/**
+ * Búsqueda de ETFs por ticker idéntico (del ETF o de una de sus tenencias),
+ * case-insensitive. Simula GET /etfs/search?q=...
  */
 export async function searchEtfs(query: string): Promise<Etf[]> {
   await delay(NETWORK_DELAY_MS)
@@ -58,7 +70,7 @@ export async function searchEtfs(query: string): Promise<Etf[]> {
     return mockEtfs.map((etf) => ({ ...etf, topHoldings: [...etf.topHoldings] }))
   }
   return mockEtfs
-    .filter((etf) => etfMatchesTicker(etf, q))
+    .filter((etf) => etfMatchesQuery(etf, q))
     .map((etf) => ({ ...etf, topHoldings: [...etf.topHoldings] }))
 }
 
@@ -76,6 +88,6 @@ export async function queryEtfs(params: {
 
   return mockEtfs
     .filter((etf) => (category === 'All' ? true : etf.category === category))
-    .filter((etf) => (q ? etfMatchesTicker(etf, q) : true))
+    .filter((etf) => (q ? etfMatchesQuery(etf, q) : true))
     .map((etf) => ({ ...etf, topHoldings: [...etf.topHoldings] }))
 }
